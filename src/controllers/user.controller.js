@@ -1,0 +1,389 @@
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/apiError.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { User } from "../models/user.models.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/generateToken.js";
+
+// Register User
+export const registerUser = asyncHandler(async (req, res) => {
+  const { firstname, lastname, email, phone, password, role } = req.body;
+
+  if (!firstname || !lastname || !email || !phone || !password) {
+    throw new ApiError(400, "All required fields must be provided");
+  }
+
+  const existingUser = await User.findOne({
+    $or: [{ email }, { phone }],
+  });
+
+  if (existingUser) {
+    throw new ApiError(409, "User with email or phone already exists");
+  }
+
+  const user = await User.create({
+    firstname,
+    lastname,
+    email,
+    phone,
+    password,
+    role: role || "tenant",
+  });
+
+  const createdUser = await User.findById(user._id).select("-password");
+
+  if (!createdUser) {
+    throw new ApiError(500, "Something went wrong while registering user");
+  }
+
+  // Generate tokens
+  const accessToken = generateAccessToken(createdUser._id);
+  const refreshToken = generateRefreshToken(createdUser._id);
+
+  // Set tokens in cookies
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  return res
+    .status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        201,
+        {
+          user: createdUser,
+          accessToken,
+          refreshToken,
+        },
+        "User registered successfully"
+      )
+    );
+});
+
+// Login User
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+
+  const isPasswordValid = await user.comparePassword(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials");
+  }
+
+  // Update last login
+  user.lastLogin = new Date();
+  await user.save();
+
+  const loggedInUser = await User.findById(user._id).select("-password");
+
+  // Generate tokens
+  const accessToken = generateAccessToken(loggedInUser._id);
+  const refreshToken = generateRefreshToken(loggedInUser._id);
+
+  // Set tokens in cookies
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged in successfully"
+      )
+    );
+});
+
+// Logout User
+export const logoutUser = asyncHandler(async (req, res) => {
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged out successfully"));
+});
+
+// Refresh Access Token
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  // Verify refresh token
+  const decoded = verifyRefreshToken(incomingRefreshToken);
+
+  if (!decoded) {
+    throw new ApiError(401, "Invalid or expired refresh token");
+  }
+
+  // Get user
+  const user = await User.findById(decoded.userId).select("-password");
+
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
+
+  if (!user.isActive) {
+    throw new ApiError(401, "User account is deactivated");
+  }
+
+  // Generate new tokens
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Set tokens in cookies
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          accessToken,
+          refreshToken,
+        },
+        "Access token refreshed successfully"
+      )
+    );
+});
+
+// Get Current User
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  const userId = req.user?._id || req.params.id;
+
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const user = await User.findById(userId).select("-password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
+});
+
+// Get All Users
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const { role, page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
+
+  const query = {};
+  if (role) {
+    query.role = role;
+  }
+
+  const users = await User.find(query)
+    .select("-password")
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ createdAt: -1 });
+
+  const total = await User.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      users,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+    }, "Users fetched successfully")
+  );
+});
+
+// Get User By ID
+export const getUserById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id)
+    .select("-password")
+    .populate("savedProperties")
+    .populate("bookingHistory");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
+});
+
+// Update User
+export const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  // Remove fields that shouldn't be updated directly
+  delete updateData.password;
+  delete updateData.email;
+  delete updateData.phone;
+
+  const user = await User.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  }).select("-password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User updated successfully"));
+});
+
+// Delete User (Soft Delete)
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { isActive: false },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "User deleted successfully"));
+});
+
+// Update Password
+export const updatePassword = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, "Old password and new password are required");
+  }
+
+  const user = await User.findById(id).select("+password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isPasswordValid = await user.comparePassword(oldPassword);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid old password");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password updated successfully"));
+});
+
+// Save Property
+export const saveProperty = asyncHandler(async (req, res) => {
+  const { id, propertyId } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user.savedProperties.includes(propertyId)) {
+    throw new ApiError(400, "Property already saved");
+  }
+
+  user.savedProperties.push(propertyId);
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Property saved successfully"));
+});
+
+// Unsave Property
+export const unsaveProperty = asyncHandler(async (req, res) => {
+  const { id, propertyId } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.savedProperties = user.savedProperties.filter(
+    (id) => id.toString() !== propertyId
+  );
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Property unsaved successfully"));
+});
+
+// Get Saved Properties
+export const getSavedProperties = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id).populate("savedProperties");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user.savedProperties, "Saved properties fetched successfully")
+    );
+});
+

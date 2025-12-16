@@ -1,0 +1,1499 @@
+{
+  "info": {
+    "name": "Property Rental Backend",
+    "_postman_id": "c6dad0e6-5bdb-4f57-9c03-1fdc9dfe13d9",
+    "description": "Complete Postman collection for /api/v1 backend (users, properties, bookings, reviews, messages, notifications, payments, analytics, health).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\":\"Aman\",\"lastname\":\"Singh\",\"email\":\"aman@example.com\",\"phone\":\"+91-9000000000\",\"password\":\"Pass@123\",\"role\":\"tenant\"}"
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"aman@example.com\",\"password\":\"Pass@123\"}"
+            }
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/refresh-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "refresh-token"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refreshToken\":\"<refresh-token>\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\":\"Aman\",\"lastname\":\"S. Sharma\",\"avatar\":\"https://cdn.example.com/avatar.png\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/users/password/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "password",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"oldPassword\":\"Pass@123\",\"newPassword\":\"NewPass@456\"}"
+            }
+          }
+        },
+        {
+          "name": "Save Property",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/:id/save-property/:propertyId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id",
+                "save-property",
+                ":propertyId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unsave Property",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/users/:id/unsave-property/:propertyId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id",
+                "unsave-property",
+                ":propertyId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Saved Properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/:id/saved-properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                ":id",
+                "saved-properties"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "Create Property",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"owner\":\"<ownerId>\",\"title\":\"Spacious 2BHK\",\"description\":\"Fully furnished 2BHK with amenities\",\"address\":{\"street\":\"Plot 24\",\"locality\":\"Ardee City\",\"city\":\"Gurgaon\",\"state\":\"Haryana\",\"pincode\":\"122011\",\"country\":\"India\"},\"propertyType\":\"2BHK\",\"bedrooms\":2,\"bathrooms\":2,\"images\":[{\"url\":\"https://cdn.example.com/main.jpg\",\"publicId\":\"properties/main\"}],\"furnishingStatus\":\"Fully Furnished\",\"totalArea\":1250,\"amenities\":[\"WiFi\",\"Parking\"],\"price\":{\"amount\":45000,\"currency\":\"INR\",\"period\":\"month\"},\"securityDeposit\":90000,\"location\":{\"type\":\"Point\",\"coordinates\":[77.05,28.45]},\"availableFrom\":\"2024-12-01\",\"availableTo\":\"2025-12-01\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties/search?q=connaught",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "connaught"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Nearby Properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties/nearby?longitude=77.22&latitude=28.61&maxDistance=5000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "nearby"
+              ],
+              "query": [
+                {
+                  "key": "longitude",
+                  "value": "77.22"
+                },
+                {
+                  "key": "latitude",
+                  "value": "28.61"
+                },
+                {
+                  "key": "maxDistance",
+                  "value": "5000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Properties By Owner",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties/owner/:ownerId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "owner",
+                ":ownerId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Property By Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties/slug/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "slug",
+                ":slug"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Property By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/properties/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Property",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/properties/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"Maintenance\",\"price\":{\"amount\":47000}}"
+            }
+          }
+        },
+        {
+          "name": "Delete Property",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/properties/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                ":id"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"propertyId\":\"<propertyId>\",\"tenantId\":\"<userId>\",\"checkInDate\":\"2024-12-10\",\"checkOutDate\":\"2025-01-10\",\"monthlyRent\":45000,\"rentAmount\":45000,\"securityDeposit\":90000,\"platformFee\":1500,\"totalAmount\":136500}"
+            }
+          }
+        },
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Booking By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Booking",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/bookings/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"platformFee\":2000,\"totalAmount\":137000}"
+            }
+          }
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/bookings/:id/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                ":id",
+                "status"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"confirmed\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/bookings/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bookings By Tenant",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings/tenant/:tenantId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "tenant",
+                ":tenantId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bookings By Property",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings/property/:propertyId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "property",
+                ":propertyId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"propertyId\":\"<propertyId>\",\"bookingId\":\"<bookingId>\",\"tenantId\":\"<userId>\",\"overallRating\":4.5,\"comment\":\"Great stay\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/reviews?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Review By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/reviews/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/reviews/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"comment\":\"Updated feedback\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/reviews/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reviews By Property",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/reviews/property/:propertyId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews",
+                "property",
+                ":propertyId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reviews By Tenant",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/reviews/tenant/:tenantId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reviews",
+                "tenant",
+                ":tenantId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Create Message",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookingId\":\"<bookingId>\",\"sender\":\"<userId>\",\"recipient\":\"<ownerId>\",\"content\":\"Hi, I will arrive at 6 PM.\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/messages?bookingId=<bookingId>",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "bookingId",
+                  "value": "<bookingId>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Message By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/messages/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Message",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/messages/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"content\":\"Updated note\"}"
+            }
+          }
+        },
+        {
+          "name": "Mark Message As Read",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/messages/:id/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages",
+                ":id",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/messages/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Messages By Booking",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/messages/booking/:bookingId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "messages",
+                "booking",
+                ":bookingId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"<userId>\",\"type\":\"booking\",\"title\":\"Booking Confirmed\",\"message\":\"Your booking has been confirmed.\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notifications?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Notification By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notifications/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Notification",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/notifications/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"priority\":\"medium\"}"
+            }
+          }
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/notifications/:id/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                ":id",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications As Read",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/notifications/user/:userId/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "user",
+                ":userId",
+                "read-all"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/notifications/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notifications By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notifications/user/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "user",
+                ":userId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bookingId\":\"<bookingId>\",\"userId\":\"<userId>\",\"amount\":136500,\"razorpayOrderId\":\"order_123\",\"method\":\"upi\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Payment By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Payment",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/payments/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tax\":2500}"
+            }
+          }
+        },
+        {
+          "name": "Update Payment Status",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/payments/:id/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                ":id",
+                "status"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"completed\",\"razorpayPaymentId\":\"pay_456\"}"
+            }
+          }
+        },
+        {
+          "name": "Process Refund",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/payments/:id/refund",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                ":id",
+                "refund"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refundAmount\":136500}"
+            }
+          }
+        },
+        {
+          "name": "Delete Payment",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/payments/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payments By Booking",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments/booking/:bookingId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "booking",
+                ":bookingId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payments By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments/user/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "user",
+                ":userId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Create Analytics",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"propertyId\":\"<propertyId>\",\"date\":\"2024-12-01\",\"period\":\"daily\",\"metrics\":{\"views\":120,\"clicks\":40,\"inquiries\":10,\"bookings\":2,\"conversion\":5},\"financial\":{\"revenue\":90000,\"commission\":4500,\"netRevenue\":85500},\"occupancy\":{\"daysBooked\":20,\"daysAvailable\":30,\"occupancyRate\":66.7}}"
+            }
+          }
+        },
+        {
+          "name": "Get All Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/analytics?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Analytics By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/analytics/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Analytics",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/analytics/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                ":id"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"metrics\":{\"views\":150}}"
+            }
+          }
+        },
+        {
+          "name": "Delete Analytics",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/analytics/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics By Property",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/analytics/property/:propertyId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "property",
+                ":propertyId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics By Date Range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/analytics/date-range?startDate=2024-11-01&endDate=2024-11-30",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-11-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-11-30"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1"
+    }
+  ]
+}
