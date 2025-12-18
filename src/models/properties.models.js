@@ -5,7 +5,7 @@ const propertySchema = new mongoose.Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Property must have an owner"],
+      // required: [true, "Property must have an owner"],
     },
     title: {
       type: String,

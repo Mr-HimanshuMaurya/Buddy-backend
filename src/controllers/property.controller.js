@@ -7,8 +7,8 @@ import { Property } from "../models/properties.models.js";
 export const createProperty = asyncHandler(async (req, res) => {
   const propertyData = req.body;
 
-  if (!propertyData.owner || !propertyData.title || !propertyData.description) {
-    throw new ApiError(400, "Owner, title, and description are required");
+  if (!propertyData.title || !propertyData.description) {
+    throw new ApiError(400, "Title and description are required");
   }
 
   const property = await Property.create(propertyData);
