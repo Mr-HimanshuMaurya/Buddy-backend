@@ -3,6 +3,36 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { Booking } from "../models/bookings.models.js";
 import { Property } from "../models/properties.models.js";
+import { Visit } from "../models/visit.model.js";
+
+// Schedule a Visit
+export const scheduleVisit = asyncHandler(async (req, res) => {
+  const { propertyId, name, email, phone, date, time, message } = req.body;
+
+  if (!propertyId || !name || !email || !phone || !date || !time) {
+    throw new ApiError(400, "All required fields must be provided");
+  }
+
+  const property = await Property.findById(propertyId);
+  if (!property) {
+    throw new ApiError(404, "Property not found");
+  }
+
+  const visit = await Visit.create({
+    propertyId,
+    userId: req.user?._id,
+    name,
+    email,
+    phone,
+    date,
+    time,
+    message,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, visit, "Visit scheduled successfully"));
+});
 
 // Create Booking
 export const createBooking = asyncHandler(async (req, res) => {
