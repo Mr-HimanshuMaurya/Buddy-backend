@@ -2,6 +2,7 @@ import express from "express";
 import {
   createBooking,
   scheduleVisit,
+  sendPropertyEnquiry,
   getAllBookings,
   getBookingById,
   updateBooking,
@@ -14,6 +15,7 @@ import {
 const router = express.Router();
 
 router.post("/visit", scheduleVisit);
+router.post("/enquiry", sendPropertyEnquiry);
 router.post("/", createBooking);
 router.get("/", getAllBookings);
 router.get("/tenant/:tenantId", getBookingsByTenant);

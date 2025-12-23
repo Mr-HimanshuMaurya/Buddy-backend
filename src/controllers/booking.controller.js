@@ -4,6 +4,8 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { Booking } from "../models/bookings.models.js";
 import { Property } from "../models/properties.models.js";
 import { Visit } from "../models/visit.model.js";
+import sendEmail from "../utils/sendEmail.js";
+import { visitEmailTemplate, enquiryEmailTemplate } from "../utils/emailTemplates.js";
 
 // Schedule a Visit
 export const scheduleVisit = asyncHandler(async (req, res) => {
@@ -13,7 +15,7 @@ export const scheduleVisit = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All required fields must be provided");
   }
 
-  const property = await Property.findById(propertyId);
+  const property = await Property.findById(propertyId).populate("owner");
   if (!property) {
     throw new ApiError(404, "Property not found");
   }
@@ -29,9 +31,69 @@ export const scheduleVisit = asyncHandler(async (req, res) => {
     message,
   });
 
+  // Send Email to Owner
+  if (property.owner && property.owner.email) {
+    try {
+      await sendEmail({
+        email: property.owner.email,
+        subject: `New Visit Scheduled for ${property.title}`,
+        html: visitEmailTemplate({
+          propertyTitle: property.title,
+          name,
+          email,
+          phone,
+          date,
+          time,
+          message
+        })
+      });
+    } catch (error) {
+      console.error("Failed to send visit email:", error);
+      // Don't fail the request if email fails, but log it
+    }
+  }
+
   return res
     .status(201)
     .json(new ApiResponse(201, visit, "Visit scheduled successfully"));
+});
+
+// Send Property Enquiry
+export const sendPropertyEnquiry = asyncHandler(async (req, res) => {
+    const { propertyId, name, email, number, city, message } = req.body;
+
+    if (!propertyId || !name || !email || !number || !message) {
+        throw new ApiError(400, "All required fields must be provided");
+    }
+
+    const property = await Property.findById(propertyId).populate("owner");
+    if (!property) {
+        throw new ApiError(404, "Property not found");
+    }
+
+    // Send Email to Owner
+    if (property.owner && property.owner.email) {
+        try {
+            await sendEmail({
+                email: property.owner.email,
+                subject: `New Enquiry for ${property.title}`,
+                html: enquiryEmailTemplate({
+                    propertyTitle: property.title,
+                    name,
+                    email,
+                    number,
+                    city,
+                    message
+                })
+            });
+        } catch (error) {
+            console.error("Failed to send enquiry email:", error);
+        }
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Enquiry sent successfully"));
 });
 
 // Create Booking

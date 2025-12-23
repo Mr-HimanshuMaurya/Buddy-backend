@@ -24,7 +24,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with email or phone already exists");
   }
 
-  const user = await User.create({
+  const user = new User({
     firstname,
     lastname,
     email,
@@ -32,6 +32,8 @@ export const registerUser = asyncHandler(async (req, res) => {
     password,
     role: role || "tenant",
   });
+
+  await user.save();
 
   const createdUser = await User.findById(user._id).select("-password");
 
