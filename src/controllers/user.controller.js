@@ -140,7 +140,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
     );
 });
 
-// Login User
+// Login User (Step 1: Validate credentials & Send OTP)
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -160,9 +160,61 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
+  // Generate and save OTP
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  await OTP.create({
+    email,
+    otp: otpCode,
+  });
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Buddy - Login Verification Code",
+      message: `Your login verification code is: ${otpCode}. Valid for 10 minutes.`,
+    });
+  } catch (error) {
+    throw new ApiError(500, "Error sending login OTP. Please try again.");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { email: user.email },
+        "OTP sent to your email. Please verify to complete login."
+      )
+    );
+});
+
+// Verify Login OTP (Step 2: Verify OTP & Issue Tokens)
+export const verifyLoginOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+
+  const otpRecord = await OTP.findOne({ email, otp });
+
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
   // Update last login
   user.lastLogin = new Date();
   await user.save();
+
+  // Delete the OTP record
+  await OTP.deleteOne({ _id: otpRecord._id });
 
   const loggedInUser = await User.findById(user._id).select("-password");
 

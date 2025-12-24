@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   verifyOTP,
+  verifyLoginOTP,
   logoutUser,
   refreshAccessToken,
   getCurrentUser,
@@ -22,6 +23,7 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/verify-otp", verifyOTP);
 router.post("/login", loginUser);
+router.post("/verify-login-otp", verifyLoginOTP);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 
