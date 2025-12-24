@@ -188,8 +188,8 @@ const userSchema = new mongoose.Schema(
 );
 
 // ==================== INDEXES FOR PERFORMANCE ====================
-userSchema.index({ email: 1 });                    // Faster email lookups
-userSchema.index({ phone: 1 });                    // Faster phone lookups
+// userSchema.index({ email: 1 });                    // Faster email lookups (Already handled by unique: true)
+// userSchema.index({ phone: 1 });                    // Faster phone lookups (Already handled by unique: true)
 userSchema.index({ createdAt: -1 });               // Sort users by newest first
 
 // ==================== PRE-SAVE MIDDLEWARE ====================

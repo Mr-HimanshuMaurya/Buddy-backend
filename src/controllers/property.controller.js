@@ -7,6 +7,11 @@ import { Property } from "../models/properties.models.js";
 export const createProperty = asyncHandler(async (req, res) => {
   const propertyData = req.body;
 
+  // Automatically assign the logged-in user as the owner
+  if (req.user && req.user._id) {
+    propertyData.owner = req.user._id;
+  }
+
   if (!propertyData.title || !propertyData.description) {
     throw new ApiError(400, "Title and description are required");
   }
@@ -205,7 +210,10 @@ export const searchProperties = asyncHandler(async (req, res) => {
 
 // Get Properties By Owner
 export const getPropertiesByOwner = asyncHandler(async (req, res) => {
-  const { ownerId } = req.params;
+  // If no ownerId in params, use logged-in user's ID
+  // This ensures owners only see their own properties when calling a "my-properties" endpoint
+  const ownerId = req.params.ownerId || req.user._id;
+
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 

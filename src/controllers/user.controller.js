@@ -2,6 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { User } from "../models/user.models.js";
+import { OTP } from "../models/otp.models.js";
+import sendEmail from "../utils/sendEmail.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -35,15 +37,84 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   await user.save();
 
+  // Generate and save OTP
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  await OTP.create({
+    email,
+    otp: otpCode,
+  });
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Buddy - Verify your email",
+      message: `Your verification code is: ${otpCode}. Valid for 10 minutes.`,
+    });
+  } catch (error) {
+    // If email fails, we might want to delete the user or handle it. 
+    // For now, we'll log it, but user is created.
+    console.error("Email sending failed:", error);
+    // throw new ApiError(500, "Error sending verification email");
+  }
+
   const createdUser = await User.findById(user._id).select("-password");
 
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering user");
   }
 
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: { email: createdUser.email },
+        },
+        "User registered successfully. Please verify your email with the OTP sent."
+      )
+    );
+});
+
+// Verify OTP
+export const verifyOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user.isEmailVerified) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "User is already verified. Please login."));
+  }
+
+  // Find OTP in OTP collection
+  const otpRecord = await OTP.findOne({ email, otp });
+
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  user.isEmailVerified = true;
+  await user.save();
+
+  // Delete the OTP record after successful verification
+  await OTP.deleteOne({ _id: otpRecord._id });
+
+  const verifiedUser = await User.findById(user._id).select("-password");
+
   // Generate tokens
-  const accessToken = generateAccessToken(createdUser._id);
-  const refreshToken = generateRefreshToken(createdUser._id);
+  const accessToken = generateAccessToken(verifiedUser._id);
+  const refreshToken = generateRefreshToken(verifiedUser._id);
 
   // Set tokens in cookies
   const options = {
@@ -53,18 +124,18 @@ export const registerUser = asyncHandler(async (req, res) => {
   };
 
   return res
-    .status(201)
+    .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        201,
+        200,
         {
-          user: createdUser,
+          user: verifiedUser,
           accessToken,
           refreshToken,
         },
-        "User registered successfully"
+        "Email verified successfully"
       )
     );
 });
