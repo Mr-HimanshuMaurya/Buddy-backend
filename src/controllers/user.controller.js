@@ -48,7 +48,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: "Buddy - Verify your email",
+      subject: " Verify your email",
       message: `Your verification code is: ${otpCode}. Valid for 10 minutes.`,
     });
   } catch (error) {
@@ -160,8 +160,45 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
-  // Generate and save OTP
+  // Check if user is verified - if not, they must verify first
+  if (!user.isEmailVerified) {
+    // Still send OTP for verification, but user needs to verify via OTP first
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Delete any existing OTP for this email
+    await OTP.deleteMany({ email });
+    
+    await OTP.create({
+      email,
+      otp: otpCode,
+    });
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Email Verification Required",
+        message: `Your verification code is: ${otpCode}. Valid for 10 minutes. Please verify your email to login.`,
+      });
+    } catch (error) {
+      throw new ApiError(500, "Error sending verification OTP. Please try again.");
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { email: user.email, requiresVerification: true },
+          "Please verify your email first. OTP sent to your email."
+        )
+      );
+  }
+
+  // User is verified, send login OTP
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Delete any existing OTP for this email
+  await OTP.deleteMany({ email });
   
   await OTP.create({
     email,
@@ -171,7 +208,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: "Buddy - Login Verification Code",
+      subject: "Login Verification Code",
       message: `Your login verification code is: ${otpCode}. Valid for 10 minutes.`,
     });
   } catch (error) {
@@ -207,6 +244,13 @@ export const verifyLoginOTP = asyncHandler(async (req, res) => {
 
   if (!user) {
     throw new ApiError(404, "User not found");
+  }
+
+  // Check if user is verified - must be verified to login
+  if (!user.isEmailVerified) {
+    // If OTP is correct but user not verified, mark as verified and login
+    user.isEmailVerified = true;
+    await user.save();
   }
 
   // Update last login
