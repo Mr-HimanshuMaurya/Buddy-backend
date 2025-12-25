@@ -18,6 +18,16 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All required fields must be provided");
   }
 
+  // Check if user is trying to register as admin
+  const userRole = role || "tenant";
+  if (userRole === "admin") {
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ role: "admin" });
+    if (existingAdmin) {
+      throw new ApiError(403, "Admin account already exists. Only one admin is allowed.");
+    }
+  }
+
   const existingUser = await User.findOne({
     $or: [{ email }, { phone }],
   });
@@ -32,7 +42,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     email,
     phone,
     password,
-    role: role || "tenant",
+    role: userRole,
   });
 
   await user.save();
@@ -160,9 +170,9 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
-  // Check if user is verified - if not, they must verify first
+  // Check if user is verified
   if (!user.isEmailVerified) {
-    // Still send OTP for verification, but user needs to verify via OTP first
+    // User is not verified, send OTP for verification
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Delete any existing OTP for this email
@@ -194,34 +204,36 @@ export const loginUser = asyncHandler(async (req, res) => {
       );
   }
 
-  // User is verified, send login OTP
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Delete any existing OTP for this email
-  await OTP.deleteMany({ email });
-  
-  await OTP.create({
-    email,
-    otp: otpCode,
-  });
+  // User is verified, login directly without OTP
+  user.lastLogin = new Date();
+  await user.save();
 
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: "Login Verification Code",
-      message: `Your login verification code is: ${otpCode}. Valid for 10 minutes.`,
-    });
-  } catch (error) {
-    throw new ApiError(500, "Error sending login OTP. Please try again.");
-  }
+  const loggedInUser = await User.findById(user._id).select("-password");
+
+  // Generate tokens
+  const accessToken = generateAccessToken(loggedInUser._id);
+  const refreshToken = generateRefreshToken(loggedInUser._id);
+
+  // Set tokens in cookies
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
 
   return res
     .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
-        { email: user.email },
-        "OTP sent to your email. Please verify to complete login."
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged in successfully"
       )
     );
 });
@@ -468,7 +480,118 @@ export const deleteUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User deleted successfully"));
 });
 
-// Update Password
+// Forgot Password - Send OTP
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User with this email does not exist");
+  }
+
+  // Generate and save OTP
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Delete any existing OTP for this email
+  await OTP.deleteMany({ email });
+  
+  await OTP.create({
+    email,
+    otp: otpCode,
+  });
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password Reset Verification Code",
+      message: `Your password reset verification code is: ${otpCode}. Valid for 10 minutes.`,
+    });
+  } catch (error) {
+    throw new ApiError(500, "Error sending reset OTP. Please try again.");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { email: user.email },
+        "OTP sent to your email. Please verify to reset password."
+      )
+    );
+});
+
+// Verify Forgot Password OTP
+export const verifyForgotPasswordOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+
+  const otpRecord = await OTP.findOne({ email, otp });
+
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // OTP verified successfully, return success
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { email: user.email },
+        "OTP verified successfully. You can now reset your password."
+      )
+    );
+});
+
+// Reset Password (After OTP verification)
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !otp || !newPassword) {
+    throw new ApiError(400, "Email, OTP, and new password are required");
+  }
+
+  // Verify OTP again for security
+  const otpRecord = await OTP.findOne({ email, otp });
+
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  // Delete the OTP record
+  await OTP.deleteOne({ _id: otpRecord._id });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password reset successfully. You can now login with your new password."));
+});
+
+// Update Password (for logged in users)
 export const updatePassword = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { oldPassword, newPassword } = req.body;

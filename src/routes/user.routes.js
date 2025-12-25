@@ -12,6 +12,9 @@ import {
   getAllUsers,
   getUserById,
   updatePassword,
+  forgotPassword,
+  verifyForgotPasswordOTP,
+  resetPassword,
   saveProperty,
   unsaveProperty,
   getSavedProperties,
@@ -24,6 +27,9 @@ router.post("/register", registerUser);
 router.post("/verify-otp", verifyOTP);
 router.post("/login", loginUser);
 router.post("/verify-login-otp", verifyLoginOTP);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-forgot-password-otp", verifyForgotPasswordOTP);
+router.post("/reset-password", resetPassword);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 
