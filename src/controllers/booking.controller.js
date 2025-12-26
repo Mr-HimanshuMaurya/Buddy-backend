@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { Booking } from "../models/bookings.models.js";
 import { Property } from "../models/properties.models.js";
 import { Visit } from "../models/visit.model.js";
+import { Enquiry } from "../models/enquiry.models.js";
 import sendEmail from "../utils/sendEmail.js";
 import { visitEmailTemplate, enquiryEmailTemplate } from "../utils/emailTemplates.js";
 
@@ -61,6 +62,7 @@ export const scheduleVisit = asyncHandler(async (req, res) => {
 // Send Property Enquiry
 export const sendPropertyEnquiry = asyncHandler(async (req, res) => {
     const { propertyId, name, email, number, city, message } = req.body;
+    const userId = req.user?._id; // Get user ID if authenticated
 
     if (!propertyId || !name || !email || !number || !message) {
         throw new ApiError(400, "All required fields must be provided");
@@ -70,6 +72,21 @@ export const sendPropertyEnquiry = asyncHandler(async (req, res) => {
     if (!property) {
         throw new ApiError(404, "Property not found");
     }
+
+    // Store enquiry in database
+    const enquiry = await Enquiry.create({
+        propertyId,
+        userId: userId || undefined,
+        name,
+        email,
+        number,
+        city,
+        message,
+        status: "pending"
+    });
+
+    // Populate property details for response
+    await enquiry.populate("propertyId", "title address");
 
     // Send Email to Owner
     if (property.owner && property.owner.email) {
@@ -93,7 +110,7 @@ export const sendPropertyEnquiry = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Enquiry sent successfully"));
+        .json(new ApiResponse(200, enquiry, "Enquiry sent successfully"));
 });
 
 // Create Booking
@@ -349,5 +366,48 @@ export const getBookingsByProperty = asyncHandler(async (req, res) => {
       totalPages: Math.ceil(total / limit),
     }, "Bookings fetched successfully")
   );
+});
+
+// Get All Enquiries (Admin Only)
+export const getAllEnquiries = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, status } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const query = {};
+  if (status) query.status = status;
+
+  const enquiries = await Enquiry.find(query)
+    .populate("propertyId", "title address propertyType price images")
+    .populate("userId", "firstname lastname email phone")
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ createdAt: -1 });
+
+  const total = await Enquiry.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      enquiries,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+    }, "Enquiries fetched successfully")
+  );
+});
+
+// Delete Enquiry (Admin Only)
+export const deleteEnquiry = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const enquiry = await Enquiry.findByIdAndDelete(id);
+
+  if (!enquiry) {
+    throw new ApiError(404, "Enquiry not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Enquiry deleted successfully"));
 });
 

@@ -78,6 +78,7 @@ const propertySchema = new mongoose.Schema(
           "Studio",
           "Shared Room", // Room sharing/coliving
           "Independent House",
+          "Shop",
         ],
         message: "{VALUE} is not a valid property type",
       },

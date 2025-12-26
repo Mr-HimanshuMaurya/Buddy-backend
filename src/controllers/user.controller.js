@@ -170,6 +170,11 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
+  // Check if user account is active (not terminated)
+  if (!user.isActive) {
+    throw new ApiError(403, "Your account has been terminated. Please contact support.");
+  }
+
   // Check if user is verified
   if (!user.isEmailVerified) {
     // User is not verified, send OTP for verification
@@ -256,6 +261,11 @@ export const verifyLoginOTP = asyncHandler(async (req, res) => {
 
   if (!user) {
     throw new ApiError(404, "User not found");
+  }
+
+  // Check if user account is active (not terminated)
+  if (!user.isActive) {
+    throw new ApiError(403, "Your account has been terminated. Please contact support.");
   }
 
   // Check if user is verified - must be verified to login

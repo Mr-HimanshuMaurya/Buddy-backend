@@ -10,6 +10,8 @@ import {
   getBookingsByTenant,
   getBookingsByProperty,
   updateBookingStatus,
+  getAllEnquiries,
+  deleteEnquiry,
 } from "../controllers/booking.controller.js";
 
 const router = express.Router();
@@ -18,6 +20,8 @@ router.post("/visit", scheduleVisit);
 router.post("/enquiry", sendPropertyEnquiry);
 router.post("/", createBooking);
 router.get("/", getAllBookings);
+router.get("/enquiries", getAllEnquiries); // Get all enquiries (admin)
+router.delete("/enquiries/:id", deleteEnquiry); // Delete enquiry (admin)
 router.get("/tenant/:tenantId", getBookingsByTenant);
 router.get("/property/:propertyId", getBookingsByProperty);
 router.get("/:id", getBookingById);
